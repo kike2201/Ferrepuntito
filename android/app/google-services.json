@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "65235658072",
+    "project_id": "ferrepuntito",
+    "storage_bucket": "ferrepuntito.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:65235658072:android:19aa845880878bee06b12d",
+        "android_client_info": {
+          "package_name": "com.example.tienda_movil"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAU6i5Tpa2abk8BI7Wk6YuUlFeJE16tcyA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

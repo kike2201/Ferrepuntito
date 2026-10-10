@@ -1,0 +1,11 @@
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Permiso de Internet para desarrollo -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Permitir HTTP para Firebase Emulator en modo debug -->
+    <application
+        android:usesCleartextTraffic="true" />
+
+</manifest>
