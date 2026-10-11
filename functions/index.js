@@ -4,6 +4,27 @@ const admin = require("firebase-admin");
 
 admin.initializeApp();
 
+
+const nodemailer = require("nodemailer");
+const fs = require("node:fs");
+const path = require("node:path");
+
+// Leer las credenciales del correo solo desde el entorno local.
+const archivoEnv = path.join(__dirname, ".env");
+
+if (fs.existsSync(archivoEnv)) {
+  process.loadEnvFile(archivoEnv);
+}
+
+const smtp = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
+
+
 exports.estado = onRequest((req, res) => {
   res.status(200).json({
     mensaje: "Backend de Ferrepuntito funcionando",
@@ -354,12 +375,63 @@ exports.procesarCompra = onRequest(async (req, res) => {
       });
     }
 
+  
+    // La compra ya fue registrada en Firestore.
+    // El envio del correo no debe repetir la venta.
+    let correoEnviado = false;
+
+    const ventaRef = db.collection("ventas").doc(resultado.ventaId);
+
+    try {
+      if (!usuario.email) {
+        throw new Error("El comprador no tiene correo registrado");
+      }
+
+      const ventaDoc = await ventaRef.get();
+      const venta = ventaDoc.data();
+
+      const resumen = venta.productos.map((item) =>
+        `${item.nombre} - Cantidad: ${item.cantidad} - ` +
+        `Subtotal: $${item.subtotal}`
+      ).join("\n");
+
+      await smtp.sendMail({
+        from: process.env.SMTP_USER,
+        to: usuario.email,
+        subject: `Ferrepuntito - Compra confirmada ${resultado.ventaId}`,
+        text:
+          `Gracias por comprar en Ferrepuntito.\n\n` +
+          `Numero de venta: ${resultado.ventaId}\n\n` +
+          `Productos:\n${resumen}\n\n` +
+          `Total: $${resultado.total}\n\n` +
+          `Compra realizada en el entorno de pruebas.`,
+      });
+
+      correoEnviado = true;
+
+      await ventaRef.update({
+        correoEstado: "enviado",
+      });
+    } catch (errorCorreo) {
+      console.error("Error al enviar comprobante:", errorCorreo);
+
+      try {
+        await ventaRef.update({
+          correoEstado: correoEnviado ? "enviado" : "pendiente",
+        });
+      } catch (errorRegistro) {
+        console.error("Error guardando estado del correo:", errorRegistro);
+      }
+    }
+
     return res.status(200).json({
       mensaje: "Compra registrada correctamente",
       ventaId: resultado.ventaId,
       total: resultado.total,
+      correoEnviado,
     });
-  } catch (error) {
+
+    } catch (error) {
     console.error("Error al procesar compra:", error);
 
     return res.status(500).json({
@@ -368,3 +440,57 @@ exports.procesarCompra = onRequest(async (req, res) => {
   }
 });
 
+
+exports.probarCorreo = onRequest(async (req, res) => {
+  if (req.method !== "POST") {
+    return res.status(405).json({
+      error: "Utiliza POST.",
+    });
+  }
+
+  try {
+    const authorization = req.headers.authorization || "";
+
+    if (!authorization.startsWith("Bearer ")) {
+      return res.status(401).json({
+        error: "Debes iniciar sesion.",
+      });
+    }
+
+    let usuario;
+
+    try {
+      usuario = await admin.auth().verifyIdToken(
+        authorization.substring(7).trim(),
+      );
+    } catch (error) {
+      return res.status(401).json({
+        error: "Sesion invalida.",
+      });
+    }
+
+    if (!usuario.email || !process.env.SMTP_USER ||
+        !process.env.SMTP_PASS) {
+      return res.status(400).json({
+        error: "Falta configurar el correo.",
+      });
+    }
+
+    await smtp.sendMail({
+      from: process.env.SMTP_USER,
+      to: usuario.email,
+      subject: "Ferrepuntito - Correo de prueba",
+      text: "Este es un correo de prueba de Ferrepuntito.",
+    });
+
+    return res.status(200).json({
+      mensaje: "Correo aceptado por el servidor SMTP.",
+    });
+  } catch (error) {
+    console.error("Error al enviar correo:", error);
+
+    return res.status(500).json({
+      error: "No se pudo enviar el correo.",
+    });
+  }
+});

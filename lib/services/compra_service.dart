@@ -7,6 +7,19 @@ import 'package:http/http.dart' as http;
 
 import '../models/item_carrito.dart';
 
+class StockInsuficienteException implements Exception {
+  final List<String> productosSinStock;
+
+  StockInsuficienteException(this.productosSinStock);
+
+  @override
+  String toString() {
+    return 'Stock insuficiente o producto inexistente.';
+  }
+}
+
+
+
 class CompraService {
   // Preparar los productos que enviaremos al backend.
   Map<String, dynamic> prepararCompra(
@@ -80,10 +93,15 @@ class CompraService {
       return resultado;
     }
 
+    
     if (respuesta.statusCode == 409) {
-      throw Exception(
-        'Stock insuficiente. Revisa los productos del carrito.',
-      );
+      final ids = resultado['productosSinStock'];
+
+      final productosSinStock = ids is List
+          ? ids.whereType<String>().toList()
+          : <String>[];
+
+      throw StockInsuficienteException(productosSinStock);
     }
 
     if (respuesta.statusCode == 401) {

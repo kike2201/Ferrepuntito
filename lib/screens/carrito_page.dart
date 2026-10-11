@@ -65,6 +65,44 @@ class _CarritoPageState extends State<CarritoPage> {
           );
         },
       );
+    
+      } on StockInsuficienteException catch (error) {
+        if (!mounted) return;
+
+        final nombresRetirados = <String>[];
+
+        // Identificar y retirar los productos sin stock.
+        for (final item in carrito.productos) {
+          if (error.productosSinStock.contains(item.productoId)) {
+            nombresRetirados.add(item.nombre);
+            carrito.quitarProducto(item.productoId);
+          }
+        }
+
+        final mensaje = nombresRetirados.isEmpty
+            ? 'No se pudo completar la compra por falta de stock. '
+              'Revisa tu carrito.'
+            : 'Productos retirados por falta de stock:\n'
+              '${nombresRetirados.join(", ")}\n\n'
+              'Puedes continuar con los productos restantes.';
+
+        await showDialog<void>(
+          context: context,
+          builder: (dialogContext) {
+            return AlertDialog(
+              title: const Text('Stock insuficiente'),
+              content: Text(mensaje),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Entendido'),
+                ),
+              ],
+            );
+          },
+        );
+
+    
     } catch (error) {
       if (!mounted) return;
 

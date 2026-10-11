@@ -96,3 +96,9 @@ flutter_02.png
 
 # Configuraciones locales de Firebase
 .firebase/
+
+
+# Credenciales locales del correo
+functions/.env
+functions/.env.*
+!functions/.env.example
