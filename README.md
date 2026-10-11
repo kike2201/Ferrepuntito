@@ -173,7 +173,6 @@ Las pruebas del backend se realizaron con Postman y Firebase Emulator Suite.
 
 - Las Cloud Functions se ejecutan localmente mediante Firebase Emulator Suite.
 - No existe una pasarela de pago real.
-- No está implementado el envío de correos de confirmación de compra.
 - El carrito se mantiene en memoria durante la ejecución de la aplicación.
 - No se incluye una base de datos de demostración preconfigurada.
 - Antes de publicar el sistema deben reforzarse los controles de autorización y las reglas de seguridad de Firestore.
@@ -206,3 +205,35 @@ GitHub: https://github.com/kike2201/Ferrepuntito
 ---
 
 **Ferrepuntito — Proyecto académico de Computación Móvil, 2026.**
+
+
+## Confirmación de compras por correo
+
+Ferrepuntito envía un correo de confirmación mediante
+Nodemailer y SMTP después de registrar una compra.
+
+El comprobante incluye:
+- Número de venta.
+- Productos adquiridos.
+- Cantidades y subtotales.
+- Total de la compra.
+
+El envío fue probado exitosamente utilizando Firebase
+Emulator Suite y una cuenta Gmail configurada mediante
+contraseña de aplicación.
+
+### Configuración del correo
+
+Para ejecutar esta funcionalidad localmente, crear el
+archivo `functions/.env` con las variables:
+
+SMTP_USER=correo_remitente@gmail.com
+SMTP_PASS=contraseña_de_aplicacion
+
+Las credenciales deben ser propias del entorno de pruebas.
+El archivo `.env` está excluido de Git y no se incluye
+en el repositorio.
+
+Un fallo de SMTP no revierte una venta registrada.
+El estado del envío queda indicado en Firestore mediante
+el campo `correoEstado`.
