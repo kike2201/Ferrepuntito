@@ -24,7 +24,7 @@ void main() {
 
       expect(find.text('Martillo'), findsOneWidget);
       expect(find.textContaining('Herramientas'), findsOneWidget);
-      expect(find.textContaining('5990'), findsOneWidget);
+      expect(find.textContaining(r'$5.990'), findsOneWidget);
       expect(find.textContaining('10 unidades'), findsOneWidget);
     });
 

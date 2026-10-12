@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProductoService {
@@ -16,12 +15,14 @@ class ProductoService {
     required int precio,
     required int stock,
     required String categoria,
+    required String imagen,
   }) async {
     await _productos.add({
       'nombre': nombre,
       'precio': precio,
       'stock': stock,
       'categoria': categoria,
+      'imagen': imagen,
       'fechaCreacion': FieldValue.serverTimestamp(),
     });
   }
@@ -33,12 +34,14 @@ class ProductoService {
     required int precio,
     required int stock,
     required String categoria,
+    required String imagen,
   }) async {
     await _productos.doc(id).update({
       'nombre': nombre,
       'precio': precio,
       'stock': stock,
       'categoria': categoria,
+      'imagen': imagen,
     });
   }
 

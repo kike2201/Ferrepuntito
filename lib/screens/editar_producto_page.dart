@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
-import '../services/producto_service.dart';
 
+import 'package:flutter/material.dart';
+
+import '../services/producto_service.dart';
+import '../constants/categorias.dart';
 
 class EditarProductoPage extends StatefulWidget {
   final String productoId;
@@ -17,13 +19,12 @@ class EditarProductoPage extends StatefulWidget {
       _EditarProductoPageState();
 }
 
-class _EditarProductoPageState
-    extends State<EditarProductoPage> {
-  late TextEditingController nombreController;
-  late TextEditingController precioController;
-  late TextEditingController stockController;
-  late TextEditingController categoriaController;
+class _EditarProductoPageState extends State<EditarProductoPage> {
+  late final TextEditingController nombreController;
+  late final TextEditingController precioController;
+  late final TextEditingController stockController;
 
+  String? categoriaSeleccionada;
   bool guardando = false;
 
   @override
@@ -31,27 +32,32 @@ class _EditarProductoPageState
     super.initState();
 
     nombreController = TextEditingController(
-      text: widget.datos['nombre'].toString(),
+      text: (widget.datos['nombre'] ?? '').toString(),
     );
+
     precioController = TextEditingController(
-      text: widget.datos['precio'].toString(),
+      text: (widget.datos['precio'] ?? '').toString(),
     );
+
     stockController = TextEditingController(
-      text: widget.datos['stock'].toString(),
+      text: (widget.datos['stock'] ?? '').toString(),
     );
-    categoriaController = TextEditingController(
-      text: widget.datos['categoria'].toString(),
-    );
+
+    final categoriaOriginal =
+        (widget.datos['categoria'] ?? '').toString().trim();
+
+    categoriaSeleccionada =
+        categoriaOriginal.isEmpty ? null : categoriaOriginal;
   }
 
   Future<void> actualizarProducto() async {
     final nombre = nombreController.text.trim();
-    final categoria = categoriaController.text.trim();
+    final categoria = categoriaSeleccionada;
     final precio = int.tryParse(precioController.text.trim());
     final stock = int.tryParse(stockController.text.trim());
 
     if (nombre.isEmpty ||
-        categoria.isEmpty ||
+        categoria == null ||
         precio == null ||
         precio <= 0 ||
         stock == null ||
@@ -69,18 +75,16 @@ class _EditarProductoPageState
     });
 
     try {
-     
-await ProductoService().actualizarProducto(
-  id: widget.productoId,
-  nombre: nombre,
-  precio: precio,
-  stock: stock,
-  categoria: categoria,
-);
-
+      await ProductoService().actualizarProducto(
+      id: widget.productoId,
+      nombre: nombre,
+      precio: precio,
+      stock: stock,
+      categoria: categoria,
+      imagen: (widget.datos['imagen'] ?? '').toString(),
+      );
 
       if (!mounted) return;
-
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
@@ -104,12 +108,22 @@ await ProductoService().actualizarProducto(
     nombreController.dispose();
     precioController.dispose();
     stockController.dispose();
-    categoriaController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Conserva temporalmente las categorías antiguas
+    // para no perder información de productos existentes.
+    final opcionesCategorias = [
+      ...categoriasProductos,
+    ];
+
+    if (categoriaSeleccionada != null &&
+        !opcionesCategorias.contains(categoriaSeleccionada)) {
+      opcionesCategorias.add(categoriaSeleccionada!);
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Editar producto'),
@@ -127,6 +141,7 @@ await ProductoService().actualizarProducto(
               ),
             ),
             const SizedBox(height: 16),
+
             TextField(
               controller: precioController,
               keyboardType: TextInputType.number,
@@ -136,6 +151,7 @@ await ProductoService().actualizarProducto(
               ),
             ),
             const SizedBox(height: 16),
+
             TextField(
               controller: stockController,
               keyboardType: TextInputType.number,
@@ -145,14 +161,33 @@ await ProductoService().actualizarProducto(
               ),
             ),
             const SizedBox(height: 16),
-            TextField(
-              controller: categoriaController,
+
+            DropdownButtonFormField<String>(
+              initialValue: categoriaSeleccionada,
+              isExpanded: true,
               decoration: const InputDecoration(
                 labelText: 'Categoría',
+                prefixIcon: Icon(Icons.category),
                 border: OutlineInputBorder(),
               ),
+              items: opcionesCategorias.map((categoria) {
+                return DropdownMenuItem<String>(
+                  value: categoria,
+                  child: Text(
+                    categoria,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                );
+              }).toList(),
+              onChanged: (valor) {
+                setState(() {
+                  categoriaSeleccionada = valor;
+                });
+              },
             ),
+
             const SizedBox(height: 24),
+
             ElevatedButton(
               onPressed: guardando ? null : actualizarProducto,
               child: Text(

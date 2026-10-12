@@ -1,7 +1,9 @@
 
 import 'package:flutter/material.dart';
+
 import '../models/item_carrito.dart';
-import '../services/carrito_service.dart';  
+import '../services/carrito_service.dart';
+import '../utils/formato_precio.dart';
 
 class DetalleProductoPage extends StatelessWidget {
   final String productoId;
@@ -27,6 +29,9 @@ class DetalleProductoPage extends StatelessWidget {
     final stock =
         (datos['stock'] as num?)?.toInt() ?? 0;
 
+    final imagen =
+        (datos['imagen'] ?? '').toString().trim();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalle del producto'),
@@ -37,11 +42,37 @@ class DetalleProductoPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(
-              Icons.handyman,
-              size: 110,
-              color: Colors.orange,
+            Container(
+              height: 220,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: imagen.isEmpty
+                  ? const Icon(
+                      Icons.handyman,
+                      size: 110,
+                      color: Colors.orange,
+                    )
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.asset(
+                        imagen,
+                        width: double.infinity,
+                        height: 220,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.handyman,
+                            size: 110,
+                            color: Colors.orange,
+                          );
+                        },
+                      ),
+                    ),
             ),
+
             const SizedBox(height: 24),
 
             Text(
@@ -67,7 +98,7 @@ class DetalleProductoPage extends StatelessWidget {
             const SizedBox(height: 24),
 
             Text(
-              'Precio: \$$precio',
+              'Precio: ${formatearPrecio(precio)}',
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -83,15 +114,12 @@ class DetalleProductoPage extends StatelessWidget {
                   : 'Producto sin stock',
               style: TextStyle(
                 fontSize: 17,
-                color: stock > 0
-                    ? Colors.green
-                    : Colors.red,
+                color: stock > 0 ? Colors.green : Colors.red,
               ),
             ),
 
             const SizedBox(height: 30),
 
-            
             ElevatedButton.icon(
               onPressed: stock > 0
                   ? () {
@@ -128,7 +156,6 @@ class DetalleProductoPage extends StatelessWidget {
               icon: const Icon(Icons.shopping_cart),
               label: const Text('Agregar al carrito'),
             ),
-
           ],
         ),
       ),

@@ -344,6 +344,7 @@ class _ProductosPageState extends State<ProductosPage> {
                                   categoria: categoria,
                                   precio: precio,
                                   stock: stock,
+                                  imagen: (producto['imagen'] ?? '').toString(),
 
                                   onTap: () {
                                     Navigator.push(
